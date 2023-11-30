@@ -1,6 +1,6 @@
 # BidWars
 An app created to provide easier networking beetween small business owners and their clients. Swift + Go.
-Some of the screenshoots:
+Some of the screenshots:
 
 ![sd](https://github.com/rolthund/BidWars/blob/master/images/loginscreen.png)
 
