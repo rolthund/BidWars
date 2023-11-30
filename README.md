@@ -14,6 +14,6 @@ Some of the screenshoots:
 *List of contractors
 
 ![vefify](https://github.com/rolthund/BidWars/blob/master/images/verifylicenseview.png)
-*That is where magic happens. License verification with business authentication through phone number. 
+*That is where magic happens. License verification with business authentication by phone number. 
 
 ![welcome](https://github.com/rolthund/BidWars/blob/master/images/welcomescreen.png)
