@@ -21,4 +21,7 @@ Some of the screenshots:
 ![contrdetailedview](https://github.com/rolthund/BidWars/blob/main/images/contrdetailsview.png)
 *Detailed information about the contractor including reviews and real time license verification with date of last verification.
 
+![failverifying](https://github.com/rolthund/BidWars/blob/main/images/errverifying.png)
+*This is what happens if the verification fails.
+
 
