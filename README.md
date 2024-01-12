@@ -18,4 +18,7 @@ Some of the screenshots:
 
 ![welcome](https://github.com/rolthund/BidWars/blob/main/images/welcomescreen.png)
 
+![contrdetailedview](https://github.com/rolthund/BidWars/blob/main/images/contrdetailsview.png)
+*Detailed information about the contractor including reviews and real time license verification with date of last verification.
+
 
