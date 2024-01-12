@@ -35,6 +35,8 @@ func main() {
 	router.GET("/listcontractors", controllers.ShowContractors())
 	router.GET("/searchbyname", controllers.SearchContractorByName())
 	router.GET("/searchbytrade", controllers.SearchContractorByTrade())
-
+	router.GET("/listcontractorsreviews/:contractor_id", controllers.ShowContractorsReviews())
+	router.GET("/getbuilderbyid/:id", controllers.GetBuilderByID())
 	log.Fatal(router.Run(":" + port))
+
 }

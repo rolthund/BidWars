@@ -20,6 +20,7 @@ struct AppTabView: View {
                 .tabItem {
                     Label("Contractors", systemImage: "person.fill.checkmark")
                 }
+                .environmentObject(ContractorViewModel())
             
             ProfileView(builder: NetworkManager.shared.getBuilderFromDefaults()!)
                 .tabItem {

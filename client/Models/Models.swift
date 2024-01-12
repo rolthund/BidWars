@@ -9,15 +9,15 @@ import Foundation
 
 
 class Builder: Codable, ObservableObject{
-    var _id: String
+    var id: String
     var name: String
     var email: String
     var phone: String
     var project: [String] = []
-    var license: License = License(UBI_number: "", license_number: "", insurance: "", bond: "", isInsuranceExpired: true, isLicenseExpired: true)
+    var license: License? = nil
     
-    init(user_id: String, name: String, email: String, phone: String, project: [String], license: License) {
-        self._id = user_id
+    init(id: String, name: String, email: String, phone: String, project: [String], license: License) {
+        self.id = id
         self.name = name
         self.email = email
         self.phone = phone
@@ -27,33 +27,35 @@ class Builder: Codable, ObservableObject{
     
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self._id = try container.decode(String.self, forKey: ._id)
+        self.id = try container.decode(String.self, forKey: .id)
         self.name = try container.decode(String.self, forKey: .name)
         self.email = try container.decode(String.self, forKey: .email)
         self.phone = try container.decode(String.self, forKey: .phone)
         self.project = []
-        self.license = License(UBI_number: "", license_number: "", insurance: "", bond: "", isInsuranceExpired: true, isLicenseExpired: true)
+        self.license = try container.decodeIfPresent(License.self, forKey: .license)
     }
     
     enum CodingKeys: String, CodingKey{
-        case _id
+        case id = "_id"
         case name
         case email
         case phone
+        case license
     }
     
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(_id, forKey: ._id)
+        try container.encode(id, forKey: .id)
         try container.encode(name, forKey: .name)
         try container.encode(email, forKey: .email)
         try container.encode(phone, forKey: .phone)
+        try container.encode(license, forKey: .license)
     }
     
 }
 
 struct Contractor: Codable {
-    let contractor_id: String
+    let id: String
     let name: String
     let trade: String
     let avr_rating: Double
@@ -62,8 +64,8 @@ struct Contractor: Codable {
     let reviews: [Review]
     let license: License
     
-    init(contractor_id: String, name: String, trade: String, avr_rating: Double, email: String, phone: String, reviews: [Review], license: License) {
-        self.contractor_id = contractor_id
+    init(id: String, name: String, trade: String, avr_rating: Double, email: String, phone: String, reviews: [Review], license: License) {
+        self.id = id
         self.name = name
         self.email = email
         self.phone = phone
@@ -74,18 +76,19 @@ struct Contractor: Codable {
     }
     
     enum CodingKeys: String, CodingKey {
-            case contractor_id
+            case id = "_id"
             case name
             case trade
             case avr_rating
             case email
             case phone
             case reviews
+            case license
         }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(contractor_id, forKey: .contractor_id)
+        try container.encode(id, forKey: .id)
         try container.encode(name.uppercased(), forKey: .name)
         try container.encode(trade, forKey: .trade)
         try container.encode(avr_rating, forKey: .avr_rating)
@@ -96,43 +99,96 @@ struct Contractor: Codable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        contractor_id = try container.decode(String.self, forKey: .contractor_id)
+        id = try container.decode(String.self, forKey: .id)
         name = try container.decode(String.self, forKey: .name).lowercased()
         trade = try container.decode(String.self, forKey: .trade)
         avr_rating = try container.decode(Double.self, forKey: .avr_rating)
         email = try container.decode(String.self, forKey: .email).uppercased()
         phone = try container.decode(String.self, forKey: .phone)
         reviews = try container.decode([Review].self, forKey: .reviews)
-        license = License(UBI_number: "", license_number: "", insurance: "", bond: "", isInsuranceExpired: true, isLicenseExpired: true) // Provide default values or handle differently
+        license = try container.decode(License.self, forKey: .license)
     }
     
 }
 
 
-struct Review: Codable {
+class Review: Codable,Identifiable {
+
+    var id: String
+    var builder_id: String
+    var contractor_id: String
+    var rating: Int
+    var description: String
+    var date: Date
+    
+    init(id: String, builder_id: String, contractor_id: String, rating: Int, description: String, date: Date) {
+        self.id = id
+        self.builder_id = builder_id
+        self.contractor_id = contractor_id
+        self.rating = rating
+        self.description = description
+        self.date = date
+    }
+    
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(String.self, forKey: .id)
+        self.builder_id = try container.decode(String.self, forKey: .builder_id)
+        self.contractor_id = try container.decode(String.self, forKey: .contractor_id)
+        self.rating = try container.decode(Int.self, forKey: .rating)
+        self.description = try container.decode(String.self, forKey: .description)
+        self.date = try container.decode(Date.self, forKey: .date)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(builder_id, forKey: .builder_id)
+        try container.encode(contractor_id, forKey: .contractor_id)
+        try container.encode(rating, forKey: .rating)
+        try container.encode(description, forKey: .description)
+        
+        let dateFormatter = ISO8601DateFormatter()
+        let dateString = dateFormatter.string(from: date)
+        
+        try container.encode(dateString, forKey: .date)
+    }
+    
+    
+    
+    enum CodingKeys: String, CodingKey{
+        case id = "_id"
+        case builder_id
+        case contractor_id
+        case rating
+        case description
+        case date
+    }
 }
+
 
 struct License: Codable{
-    let UBI_number: String
-    let license_number: String
-    let insurance: String
-    let bond: String
+    let UBI_number: String?
+    let license_number: String?
+    let insurance: String?
+    let bond: String?
     let isInsuranceExpired: Bool
     let isLicenseExpired: Bool
+    let lastverified: String?
 }
 
-struct Project: Codable, Hashable{
-    let project_id: String
-    let builder_id: String
-    let name: String
-    let description: String
-    let trade: String
-    let location: String
-    let bidable: Bool
-    let start_date: Date
+class Project: Codable, ObservableObject{
+    var id: String
+    var builder_id: String
+    var name: String
+    var description: String
+    var trade: String
+    var location: String
+    var bidable: Bool
+    var start_date: Date
     
     enum CodingKeys: String, CodingKey {
-            case project_id
+            case id = "_id"
             case builder_id
             case description
             case name
@@ -142,9 +198,9 @@ struct Project: Codable, Hashable{
             case start_date
         }
     
-    init(from decoder: Decoder) throws {
+    required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.project_id = try container.decode(String.self, forKey: .project_id)
+        self.id = try container.decode(String.self, forKey: .id)
         self.builder_id = try container.decode(String.self, forKey: .builder_id)
         self.name = try container.decode(String.self, forKey: .name)
         self.description = try container.decode(String.self, forKey: .description)
@@ -154,8 +210,8 @@ struct Project: Codable, Hashable{
         self.start_date = try container.decode(Date.self, forKey: .start_date)
     }
     
-    init(project_id: String, builder_id: String, name: String, description: String, trade: String, location: String, bidable: Bool, start_date: Date){
-        self.project_id = project_id
+    init(id: String, builder_id: String, name: String, description: String, trade: String, location: String, bidable: Bool, start_date: Date){
+        self.id = id
         self.builder_id = builder_id
         self.name = name
         self.description = description
@@ -167,7 +223,7 @@ struct Project: Codable, Hashable{
     
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(project_id, forKey: .project_id)
+        try container.encode(id, forKey: .id)
         try container.encode(description, forKey: .description)
         try container.encode(name, forKey: .name)
         try container.encode(trade, forKey: .trade)

@@ -15,8 +15,7 @@ import (
 
 var PhoneNumber string
 
-func checkLicense(UBI string, insurance string, license string, bond string) (bool, error) {
-	var isValid = false
+func checkLicense(UBI string, license string) (bool, error) {
 	//we will use a phone nub=mber verification from lni site and no longer need to verify company name
 	url := fmt.Sprintf("https://secure.lni.wa.gov/verify/Detail.aspx?UBI=%s&LIC=%s&SAW=", UBI, license)
 
@@ -74,12 +73,16 @@ func checkLicense(UBI string, insurance string, license string, bond string) (bo
 	}
 
 	if strings.ToLower(license) == strings.ToLower(scrapedLicense) && !isInsuranceExpired && !isLicenseExpired {
-		isValid = true
+
 		PhoneNumber = "+1" + strings.ReplaceAll(PhoneNumber, "-", "")
-		twilio.SendOtp(PhoneNumber)
+		if err = twilio.SendOtp(PhoneNumber); err != nil {
+			return false, fmt.Errorf("failed to send OTP: %v", err)
+		}
+
+		return true, nil
 	}
 
-	return isValid, nil
+	return false, errors.New("license is not valid or expired")
 
 }
 
@@ -91,7 +94,7 @@ func VerifyLicenseInfo(license models.License) (bool, error) {
 	var err error
 	loopCycle := 0
 	for {
-		isVerified, err = checkLicense(*license.UBI_number, *license.Insurance, *license.License_number, *license.Bond)
+		isVerified, err = checkLicense(*license.UBI_number, *license.License_number)
 		if err == nil {
 			break
 		}

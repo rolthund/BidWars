@@ -10,6 +10,13 @@ import Foundation
 class Util{
     static let util = Util()
     
+    let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .long
+        formatter.timeStyle = .medium
+        return formatter
+    }()
+    
     private var stateArray: [String] = ["AL", "AK", "AZ", "AR", "CA",
                                        "CO", "CT", "DE", "FL", "GA",
                                        "HI", "ID", "IL", "IN", "IA",
@@ -28,13 +35,28 @@ class Util{
                                       "Fence Installation", "Window Installation","Bricklaying", "Stucco", "Waterproofing",
                                       "Siding", "Gutter Installation", "Swimming Pool Installation",
                                       "Land Clearing", "Ductwork Installation", "Septic System Installation", "Carpet Installation",
-                                      "Decking", "Patio Installation"]
+                                      "Decking"]
     
     func dateToString(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
         return formatter.string(from: date)
+    }
+    
+    func formatToSimpleStringDate(_ originalString: String) -> String {
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+
+        guard let date = isoFormatter.date(from: originalString) else {
+            fatalError("Invalid date format")
+        }
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "dd MMM yyyy"
+        dateFormatter.locale = Locale(identifier: "en_US")
+
+        return dateFormatter.string(from: date)
     }
     
     func getStates() -> [String]{

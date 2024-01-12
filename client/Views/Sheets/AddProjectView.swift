@@ -10,7 +10,6 @@ import SwiftUI
 struct AddProjectView: View {
     @EnvironmentObject var projectViewModel: ProjectViewModel
     @Binding var isSheetPresented: Bool
-    @Binding var isCreatedSuccessfully:Bool
     @State private var tradeArray = Util.util.getTrades()
     
     @State private var isButtonTapped = false
@@ -45,8 +44,6 @@ struct AddProjectView: View {
                     
                     DatePicker("Estimated start date", selection: $start_date, displayedComponents: .date)
                         .onChange(of: start_date) { newDate in
-                            // Adjust the time component after the date is picked
-                            // Here, setting the time to 8:00 AM as an example
                             let calendar = Calendar.current
                             if let adjustedDateTime = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: newDate) {
                                 start_date = adjustedDateTime
@@ -67,21 +64,11 @@ struct AddProjectView: View {
                     )
                     .padding()
                 
-                
                 ZStack{
                     HStack{
                         Spacer()
                         Button(action: {
-                            print(start_date)
                             isButtonTapped = true
-                            projectViewModel.createNewProject(name: name, description: description, trade: trade, location: location, start_date: start_date, bidable: bidable) { success in
-                                if success{
-                                    showSuccessAlert = true
-                                    isCreatedSuccessfully = true
-                                } else {
-                                    showFailAlert = true
-                                }
-                            }
                         }) {
                             Text("Add Project")
                                 .foregroundColor(.white)
@@ -101,8 +88,9 @@ struct AddProjectView: View {
             .alert(isPresented: $isButtonTapped){
                 Alert(title: Text("Allow contractors to bid?"),
                       message: Text("Do you want your contractors to be able to bid for this project (you can always allow this later)."),
-                      primaryButton: .default(Text("Allow"), action: {bidable = true; isSheetPresented = false}),
-                      secondaryButton: .default(Text("Don't allow"), action: {bidable = false; isSheetPresented = false})
+                      primaryButton: .default(Text("Allow"), action: {bidable = true; callAddProject(); 
+                          isSheetPresented = false}),
+                      secondaryButton: .default(Text("Don't allow"), action: {bidable = false; callAddProject(); isSheetPresented = false})
                 )
             })
         .overlay(
@@ -117,6 +105,15 @@ struct AddProjectView: View {
                     Alert(title: Text("Error"), message: Text("An error occured while creating project, please try again"), dismissButton: .default(Text("OK")))
                 }
         )
+    }
+    func callAddProject(){
+        projectViewModel.createNewProject(name: name, description: description, trade: trade, location: location, start_date: start_date, bidable: bidable) { success in
+            if success{
+                showSuccessAlert = true
+            } else {
+                showFailAlert = true
+            }
+        }
     }
 }
 
@@ -141,7 +138,6 @@ struct PlaceholderTextEditor: View {
 struct AddProjectView_Previews: PreviewProvider {
     static var previews: some View {
         @State var isPresented = false
-        @State var isCreatedSuccessfully = false
-        AddProjectView(isSheetPresented: $isPresented, isCreatedSuccessfully: $isCreatedSuccessfully)
+        AddProjectView(isSheetPresented: $isPresented)
     }
 }

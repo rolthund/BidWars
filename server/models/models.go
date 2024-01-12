@@ -22,7 +22,7 @@ type Builder struct {
 }
 
 type Contractor struct {
-	Contractor_ID primitive.ObjectID `json:"contractor_id"`
+	Contractor_ID primitive.ObjectID `json:"_id" bson:"_id"`
 	Name          *string            `json:"name" validate:"required,min=2,max=30"`
 	Trade         *string            `json:"trade" validate:"required,min=2,max=30"`
 	Avr_rating    float32            `json:"avr_rating"`
@@ -38,7 +38,7 @@ type BuilderContractor struct {
 }
 
 type Project struct {
-	Project_ID  primitive.ObjectID `json:"project_id" bson:"project_id"`
+	Project_ID  primitive.ObjectID `json:"_id" bson:"_id"`
 	Builder_ID  primitive.ObjectID `json:"builder_id" bson:"builder_id"`
 	Description *string            `json:"description"`
 	Name        *string            `json:"name"`
@@ -49,17 +49,20 @@ type Project struct {
 }
 
 type Review struct {
-	Review_ID   primitive.ObjectID `bson:"_id"`
-	Rating      float32            `json:"rating"`
-	Description *string            `json:"description"`
-	Author      Builder            `json:"author"`
+	Review_ID     primitive.ObjectID `json:"_id" bson:"_id"`
+	Contractor_ID primitive.ObjectID `json:"contractor_id" bson:"contractor_id"`
+	Builder_ID    primitive.ObjectID `json:"builder_id" bson:"builder_id"`
+	Rating        int                `json:"rating"`
+	Description   *string            `json:"description"`
+	Date          time.Time          `json:"date"`
 }
 
 type License struct {
-	InsuranceExpired bool    `json:"isInsuranceExpired"`
-	LicenseExpired   bool    `json:"isLicenseExpired"`
-	UBI_number       *string `json:"UBI_number"`
-	License_number   *string `json:"license_number"`
-	Bond             *string `json:"bond"`
-	Insurance        *string `json:"insurance"`
+	InsuranceExpired bool      `json:"isInsuranceExpired"`
+	LicenseExpired   bool      `json:"isLicenseExpired"`
+	UBI_number       *string   `json:"UBI_number"`
+	License_number   *string   `json:"license_number"`
+	Bond             *string   `json:"bond"`
+	Insurance        *string   `json:"insurance"`
+	LastVerifiedDate time.Time `json:"lastverified"`
 }

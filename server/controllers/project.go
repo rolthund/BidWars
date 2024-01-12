@@ -138,7 +138,7 @@ func UpdateProject() gin.HandlerFunc {
 			return
 		}
 
-		filter := bson.M{"project_id": projectID}
+		filter := bson.M{"_id": projectID}
 		update := bson.M{"$set": bson.M{
 			"name":        editproject.Name,
 			"description": editproject.Description,

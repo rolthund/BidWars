@@ -8,8 +8,14 @@
 import SwiftUI
 
 struct ProjectDetailView: View {
-    let project: Project
+    @EnvironmentObject var projectViewModel: ProjectViewModel
+    
+    @State var project: Project
     @State var bidable: Bool
+    @State private var isEditPresented = false
+    @State private var editSuccess = false
+    @State private var isBidableToggled = false
+    @State private var showBidableToggleFailAlert = false
     
     var body: some View {
         ScrollView{
@@ -55,10 +61,20 @@ struct ProjectDetailView: View {
                 
                 
                 Spacer()
-                    Section(footer: Text("Allow your contractors with matching trade to bid on this project ")) {
-                        Toggle(isOn: self.$bidable) {
+                    Section(footer: Text("Allow your contractors with matching trade to bid on this project.")) {
+                        Toggle(isOn: $project.bidable) {
                             Text("Allow Bidding")
                                 .fontWeight(.semibold)
+                        }
+                        .onChange(of: project.bidable){newValue in
+                                projectViewModel.updateProject(project_id: project.id, name: project.name, description: project.description, trade: project.trade, location: project.location, start_date: project.start_date, bidable: newValue){success in
+                                    if success{
+                                        isBidableToggled = true
+                                        projectViewModel.fetchProjects()
+                                    }else{
+                                        showBidableToggleFailAlert = true
+                                    }
+                                }
                         }
                 }
                     .padding(.horizontal)
@@ -67,10 +83,28 @@ struct ProjectDetailView: View {
             .toolbar{
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Edit") {
-                        
+                        isEditPresented = true
                     }
                 }
             }
+            .sheet(isPresented: $isEditPresented){
+                EditProjectView(project: project, isSheetPresented: $isEditPresented, isUpdatedSuccessfully: $editSuccess)
+            }
+            .overlay(EmptyView()
+                .alert(isPresented: $isBidableToggled){
+                    Alert(title: Text("Bidding change!"),
+                          message: Text("Your contractors ability to bid for the \(project.name) has chanched."),
+                          dismissButton: .default(Text("OK"))
+                    )
+                })
+            .overlay(EmptyView()
+                .alert(isPresented: $showBidableToggleFailAlert){
+                    Alert(title: Text("Error changing bidding."),
+                          message: Text("An error has occured while changing bidding option, please try again later."),
+                          dismissButton: .default(Text("OK"))
+                    )
+                })
+            .disabled(editSuccess)
         }
     }
 }
@@ -78,7 +112,7 @@ struct ProjectDetailView: View {
 struct ProjectDetailView_Previews: PreviewProvider {
     static var previews: some View {
         let project = Project(
-            project_id: "35463",
+            id: "35463",
             builder_id: "123",
             name:"Project 1",
             description: "4000sf 2 story house 7 inch hardie siding and prewrap" ,

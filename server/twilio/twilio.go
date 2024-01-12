@@ -11,7 +11,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func SendOtp(to string) {
+func SendOtp(to string) error {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -32,10 +32,11 @@ func SendOtp(to string) {
 
 	if err != nil {
 		fmt.Println(err.Error())
+		return err
 	} else {
 		fmt.Printf("Sent verification '%s'\n", *resp.Sid)
+		return nil
 	}
-
 }
 
 func CheckOtp(to string, code string) (bool, error) {

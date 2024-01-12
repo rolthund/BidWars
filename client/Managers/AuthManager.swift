@@ -41,30 +41,26 @@ class AuthManager {
                let httpResponse = response as? HTTPURLResponse,
                error == nil,
                httpResponse.statusCode == 201 {
-                //Success
+                
                 completion(true)
                 
             } else {
-                //Fail
                 completion(false)
             }
         }.resume()
     }
     
     func login(email: String, password: String, completion: @escaping (Bool) -> Void) {
-            // Define the API endpoint for login
             guard let loginURL = URL(string: "http://localhost:8000/users/login") else {
                 completion(false)
                 return
             }
             
-            // Create a dictionary to represent the JSON data
             let json: [String: Any] = [
                 "email": email,
                 "password": password
             ]
             
-            // Convert the dictionary to JSON data
             guard let jsonData = try? JSONSerialization.data(withJSONObject: json) else {
                 completion(false)
                 return

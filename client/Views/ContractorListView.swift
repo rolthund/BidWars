@@ -9,10 +9,10 @@ import SwiftUI
 
 struct ContractorListView: View {
     
-    @ObservedObject private var viewModel = ContractorViewModel()
+    @EnvironmentObject var viewModel: ContractorViewModel
     
     @State private var searchText = ""
-    @State private var showMyContractorsOnly = false
+    @State private var showMyContractorsOnly = true
     
     var filteredContractors: [Contractor] {
         var filtered = showMyContractorsOnly ? viewModel.myContractors : viewModel.allContractors
@@ -34,7 +34,7 @@ struct ContractorListView: View {
                 .pickerStyle(SegmentedPickerStyle())
                 .padding()
                 
-                List(filteredContractors, id: \.contractor_id) { contractor in
+                List(filteredContractors, id: \.id) { contractor in
                     NavigationLink(destination: ContractorDetailView(contractor: contractor)) {
                         ContractorDescription(contractor: contractor)
                     }
@@ -44,20 +44,6 @@ struct ContractorListView: View {
                 }
                 .navigationTitle("Contractors")
                 .searchable(text: $searchText)
-                .navigationBarItems(
-                    trailing:
-                        Button(action: {
-                            AuthManager.shared.logout()
-                        }) {
-                            VStack{
-                                Image(systemName: "rectangle.portrait.and.arrow.right")
-                                    .resizable()
-                                    .frame(width: 20, height: 20)
-                                    .foregroundColor(.gray)
-                               Text("Log Out")
-                                .foregroundColor(.red)
-                    }
-                })
             }   
         }
     }
@@ -112,18 +98,19 @@ struct ContractorDescription: View {
                 
                 HStack {
                     HStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.brandPrimary)
-                        
-                        Text("insured")
+                        let image: String = !contractor.license.isInsuranceExpired ? "checkmark.circle.fill" : "xmark.circle.fill"
+                        let color: Color = !contractor.license.isInsuranceExpired ? .brandPrimary : .red
+                        Image(systemName: image)
+                            .foregroundColor(color)
+                        Text("Insured")
                     }
-                    
+                    Spacer()
                     HStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.brandPrimary)
-                        
-                        Text("bonded")
-                        Spacer()
+                        let image = !contractor.license.isLicenseExpired ? "checkmark.circle.fill" : "xmark.circle.fill"
+                        let color: Color = !contractor.license.isLicenseExpired ? .brandPrimary : .red
+                        Image(systemName: image)
+                            .foregroundColor(color)
+                        Text("License valid")
                     }
                 }
             }
@@ -135,5 +122,6 @@ struct ContractorDescription: View {
 struct ContractorListView_Previews: PreviewProvider {
     static var previews: some View {
         ContractorListView()
+            .environmentObject(ContractorViewModel())
     }
 }

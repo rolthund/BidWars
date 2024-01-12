@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	verify "github.com/rolthund/bidwars/license"
 	"github.com/rolthund/bidwars/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -140,7 +141,7 @@ func ShowMyContractors() gin.HandlerFunc {
 
 		// Find contractors using the collected IDs
 		var contractors []models.Contractor
-		contractorFilter := bson.M{"contractor_id": bson.M{"$in": contractorIDs}}
+		contractorFilter := bson.M{"_id": bson.M{"$in": contractorIDs}}
 		cursor, err = ContractorCollection.Find(context.Background(), contractorFilter)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "Error retrieving contractors"})
@@ -207,11 +208,79 @@ func RemoveFromContractorsList() gin.HandlerFunc {
 
 func SortByRating() gin.HandlerFunc {
 	return func(c *gin.Context) {
+
 	}
 }
 
 func LeaveReview() gin.HandlerFunc {
-	return func(c *gin.Context) {}
+	return func(c *gin.Context) {
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+		var review models.Review
+
+		builder_ID := c.Param("id")
+		builderID, _ := primitive.ObjectIDFromHex(builder_ID)
+
+		contractor_ID := c.Param("contractor_id")
+		contractorID, _ := primitive.ObjectIDFromHex(contractor_ID)
+
+		if err := c.BindJSON(&review); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Error binding review"})
+			return
+		}
+
+		review.Review_ID = primitive.NewObjectID()
+		review.Builder_ID = builderID
+		review.Contractor_ID = contractorID
+
+		_, inserterr := reviewCollection.InsertOne(ctx, review)
+		if inserterr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error adding new review"})
+			return
+		}
+		defer cancel()
+		c.JSON(http.StatusCreated, "Review successfully added")
+	}
+}
+
+func ShowContractorsReviews() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		contractor_ID := c.Param("contractor_id")
+		contractorID, err := primitive.ObjectIDFromHex(contractor_ID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid contractor ID format"})
+			return
+		}
+
+		var reviews []models.Review
+
+		filter := bson.M{"contractor_id": contractorID}
+
+		cursor, err := reviewCollection.Find(ctx, filter)
+		if err != nil {
+			c.IndentedJSON(http.StatusInternalServerError, "Something went wront with displaying contractors reviews")
+			return
+		}
+
+		err = cursor.All(ctx, &reviews)
+		if err != nil {
+			log.Println(err)
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+		defer cursor.Close(ctx)
+
+		if err := cursor.Err(); err != nil {
+			log.Println(err)
+			c.IndentedJSON(400, "invalid")
+			return
+		}
+		defer cancel()
+		c.IndentedJSON(200, reviews)
+	}
 }
 
 func ContractorViewerAdmin() gin.HandlerFunc {
@@ -226,6 +295,8 @@ func ContractorViewerAdmin() gin.HandlerFunc {
 		contractor.Contractor_ID = primitive.NewObjectID()
 		contractor.Reviews = make([]models.Review, 0)
 		contractor.License = models.License{}
+		contractor.License.InsuranceExpired = true
+		contractor.License.LicenseExpired = true
 		_, anyerr := ContractorCollection.InsertOne(ctx, contractor)
 		if anyerr != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Not Created"})
@@ -233,5 +304,77 @@ func ContractorViewerAdmin() gin.HandlerFunc {
 		}
 		defer cancel()
 		c.JSON(http.StatusOK, "Successfully added our Contractor Admin!!")
+	}
+}
+
+func VerifyContrctorsLicense() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		var contractor models.Contractor
+
+		contractor_ID := c.Param("contractor_id")
+		contractorID, _ := primitive.ObjectIDFromHex(contractor_ID)
+
+		err := ContractorCollection.FindOne(ctx, bson.M{"_id": contractorID}).Decode(&contractor)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find contractor"})
+			return
+		}
+		defer cancel()
+
+		isValid, err := verify.VerifyLicenseInfo(contractor.License)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+			return
+		}
+
+		if !isValid {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid license information"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "License verified successfully!"})
+	}
+}
+
+func UpdateContractorsLicense() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+		var contractor models.Contractor
+
+		now := time.Now()
+		today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+
+		contractor_ID := c.Param("contractor_id")
+		contractorID, _ := primitive.ObjectIDFromHex(contractor_ID)
+
+		err := ContractorCollection.FindOne(ctx, bson.M{"_id": contractorID}).Decode(&contractor)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find contractor"})
+			return
+		}
+		defer cancel()
+
+		contractor.License.LastVerifiedDate = today
+
+		filter := bson.M{"_id": contractorID}
+
+		update := bson.M{
+			"$set": bson.M{
+				"license": contractor.License,
+			},
+		}
+
+		_, err = ContractorCollection.UpdateOne(ctx, filter, update)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update contractor"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "License updated successfully"})
 	}
 }

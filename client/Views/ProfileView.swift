@@ -16,6 +16,7 @@ struct ProfileView: View {
     @State private var isLicenseFormPresent = false
     @State private var showVerifyNumber = false
     @State private var isPhoneVerified = false
+    @State private var isWrongTwilioCode = false
     @State private var username: String = "James"
     @State private var selectedState: String = "WA"
     @State private var unabledStates: Set<String> = ["WA"]
@@ -28,6 +29,22 @@ struct ProfileView: View {
         ZStack{
             
             GeometryReader { g in
+                HStack{
+                    Spacer()
+                    Button(action: {
+                        AuthManager.shared.logout()
+                    }) {
+                        VStack{
+                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                                .resizable()
+                                .frame(width: 20, height: 20)
+                                .foregroundColor(.gray)
+                            Text("Log Out")
+                                .foregroundColor(.red)
+                        }
+                    }
+                    .padding()
+                }
                 VStack {
                     Image("italy")
                         .resizable()
@@ -35,7 +52,7 @@ struct ProfileView: View {
                         .background(Color.yellow)
                         .clipShape(Circle())
                         .padding(.bottom, 10)
-                    Text("John Appleseed")
+                    Text(builder.name)
                         .font(.system(size: 20))
                     
                     Form {
@@ -55,7 +72,6 @@ struct ProfileView: View {
                                     if(trade == "General"){
                                         Text(trade)
                                     }
-                                    
                                 }
                             }
                             
@@ -70,8 +86,6 @@ struct ProfileView: View {
                             
                         }
                         
-                        
-                        
                         Section(header: Text("Personal Information")) {
                             NavigationLink(destination: Text("Profile Info")) {
                                 Text("Profile Information")
@@ -82,7 +96,7 @@ struct ProfileView: View {
                             }
                         }
                         
-                        Section(footer: Text("Allow push notifications to get latest travel and equipment deals")) {
+                        Section(footer: Text("Allow push notifications to get updates from contractors.")) {
                             Toggle(isOn: self.$locationUsage) {
                                 Text("Location Usage")
                             }
@@ -94,6 +108,7 @@ struct ProfileView: View {
                     }.background(Color(red: 242 / 255, green: 242 / 255, blue: 242 / 255))
                         .navigationBarTitle("Settings")
                 }
+                
                 if isLicenseFormPresent{
                     Color.black.opacity(0.5)
                         .edgesIgnoringSafeArea(.all)
@@ -101,9 +116,7 @@ struct ProfileView: View {
                             isLicenseFormPresent.toggle()
                         }
                     VStack {
-                        
                         Spacer()
-                        
                         HStack {
                             Spacer()
                             
@@ -115,14 +128,9 @@ struct ProfileView: View {
                                 .ignoresSafeArea(.all)
                             
                             Spacer()
-                       }
-                        
-                        
-                       
+                        }
                         Spacer()
                     }
-                    
-                    
                 }
                 
                 if showVerifyNumber{
@@ -132,13 +140,11 @@ struct ProfileView: View {
                             showVerifyNumber.toggle()
                         }
                     VStack {
-                        
                         Spacer()
-                        
                         HStack {
                             Spacer()
                             
-                            VerificationCodeInputView(isPhoneVerified: $isPhoneVerified, isPresented: $showVerifyNumber)
+                            VerificationCodeInputView(isPhoneVerified: $isPhoneVerified, isWrongTwilioCode: $isWrongTwilioCode, isPresented: $showVerifyNumber)
                                 .frame(width: 300, height: 360)
                                 .background(Color(.systemBackground))
                                 .cornerRadius(16)
@@ -146,10 +152,7 @@ struct ProfileView: View {
                                 .ignoresSafeArea(.all)
                             
                             Spacer()
-                       }
-                        
-                        
-                       
+                        }
                         Spacer()
                     }
                 }
@@ -163,8 +166,15 @@ struct ProfileView: View {
                 dismissButton: .default(Text("OK"))
             )
         }
+        .alert(isPresented: $isWrongTwilioCode){
+            Alert(
+                title: Text("Failed to verify."),
+                message: Text("Could not verify your phone number, code was not entered correctly."),
+                dismissButton: .default(Text("OK"))
+            )
+        }
     }
- }
+}
 
 
 
@@ -172,12 +182,12 @@ struct Previews_ProfileView_Previews: PreviewProvider {
     
     static var previews: some View {
         let builder = Builder(
-            user_id: "2",
+            id: "2",
             name: "GR",
             email: "GR@gmail.com",
             phone: "5657",
             project: [],
-            license: License(UBI_number: "Asd", license_number: "S", insurance: "ASd", bond: "AS", isInsuranceExpired: false, isLicenseExpired: false)
+            license: License(UBI_number: "Asd", license_number: "S", insurance: "ASd", bond: "AS", isInsuranceExpired: false, isLicenseExpired: false, lastverified: "")
         )
         ProfileView(builder: builder)
     }

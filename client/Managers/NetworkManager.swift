@@ -25,18 +25,18 @@ class NetworkManager {
         }
         
         let builder = Builder(
-            user_id: "",
+            id: "",
             name: "",
             email: "",
             phone: "",
             project: [],
-            license: License(UBI_number: "", license_number: "", insurance: "", bond: "", isInsuranceExpired: true, isLicenseExpired: true)
+            license: License(UBI_number: "", license_number: "", insurance: "", bond: "", isInsuranceExpired: true, isLicenseExpired: true, lastverified: "")
         )
         return builder
     }
     
     func verifyLicense(UBI_number: String, license_number: String, completion: @escaping (Bool) -> Void) {
-        let user_id = NetworkManager.shared.getBuilderFromDefaults()?._id
+        let user_id = NetworkManager.shared.getBuilderFromDefaults()?.id
         guard let url = URL(string: "http://localhost:8000/users/\(String(describing: user_id!))/verifylicense") else {
             return
         }
@@ -45,8 +45,8 @@ class NetworkManager {
         request.httpMethod = "POST"
         
         let json: [String: Any] = [
-            "isInsuranceExpired": false,
-            "isLicenseExpired": false,
+            "isInsuranceExpired": true,
+            "isLicenseExpired": true,
             "UBI_number": UBI_number,
             "license_number": license_number,
             "insurance": "",
@@ -76,7 +76,7 @@ class NetworkManager {
     }
     
     func updateLicense(UBI_number: String, license_number: String, completion: @escaping (Bool) -> Void) {
-        let user_id = NetworkManager.shared.getBuilderFromDefaults()?._id
+        let user_id = NetworkManager.shared.getBuilderFromDefaults()?.id
         guard let url = URL(string: "http://localhost:8000/users/\(String(describing: user_id!))/updatelicense") else {
             return
         }
@@ -85,8 +85,8 @@ class NetworkManager {
         request.httpMethod = "PUT"
         
         let json: [String: Any] = [
-            "isInsuranceExpired": false,
-            "isLicenseExpired": false,
+            "isInsuranceExpired": true,
+            "isLicenseExpired": true,
             "UBI_number": UBI_number,
             "license_number": license_number,
             "bond": "",
@@ -118,7 +118,7 @@ class NetworkManager {
     }
     
     func verifyPhoneNumber(code: String, completion: @escaping (Bool) -> Void) {
-        let user_id = NetworkManager.shared.getBuilderFromDefaults()?._id
+        let user_id = NetworkManager.shared.getBuilderFromDefaults()?.id
         guard let url = URL(string: "http://localhost:8000/users/\(String(describing: user_id!))/verifyphone?code=\(code)") else {
             return
         }
@@ -141,7 +141,29 @@ class NetworkManager {
         
     }
     
-    
-
+    func getBuilderByID(builder_id: String, completion: @escaping (Builder?, Error?) -> Void)  {
+        guard let url = URL(string: "http://localhost:8000/getbuilderbyid/\(builder_id)") else {
+            print("Invalid URL")
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                completion(nil, error)
+                return
+            }
+            
+            guard let data = data else {
+                        completion(nil, nil)
+                        return
+                    }
+                    do {
+                        let builder = try JSONDecoder().decode(Builder.self, from: data)
+                        completion(builder, nil)
+                    } catch {
+                        completion(nil, error)
+                    }
+        }.resume()
+    }
 }
 

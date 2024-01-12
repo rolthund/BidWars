@@ -25,6 +25,7 @@ var ContractorCollection *mongo.Collection = database.ContractorData(database.Cl
 var UserCollection *mongo.Collection = database.BuilderData(database.Client, "builders")
 var UserContractorCollection *mongo.Collection = database.BuilderContractorData(database.Client, "builder_contractor")
 var ProjectCollection *mongo.Collection = database.ProjectData(database.Client, "projects")
+var reviewCollection *mongo.Collection = database.ReviewData(database.Client, "reviews")
 var Validate = validator.New()
 
 func HashPassword(password string) string {
@@ -147,8 +148,18 @@ func UpdateLicense() gin.HandlerFunc {
 			return
 		}
 
-		userID := c.Param("id") // Assuming user_id is part of the URL path
-		err := UserCollection.FindOne(ctx, bson.M{"user_id": userID}).Decode(&founduser)
+		now := time.Now()
+		today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+
+		updatedLicense.LastVerifiedDate = today
+
+		user_ID := c.Param("id")
+		userID, err := primitive.ObjectIDFromHex(user_ID)
+		if err != nil {
+			c.IndentedJSON(500, err)
+		}
+
+		err = UserCollection.FindOne(ctx, bson.M{"_id": userID}).Decode(&founduser)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find user"})
 			return
@@ -157,7 +168,7 @@ func UpdateLicense() gin.HandlerFunc {
 
 		founduser.License = updatedLicense
 
-		filter := bson.M{"user_id": userID}
+		filter := bson.M{"_id": userID}
 
 		update := bson.M{
 			"$set": bson.M{
@@ -216,5 +227,27 @@ func VerifyPhoneNumber() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"message": "Phone verified successfully!"})
+	}
+}
+
+func GetBuilderByID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+		var foundBuilder models.Builder
+
+		user_ID := c.Param("id")
+		userID, err := primitive.ObjectIDFromHex(user_ID)
+		if err != nil {
+			c.IndentedJSON(500, err)
+		}
+
+		err = UserCollection.FindOne(ctx, bson.M{"_id": userID}).Decode(&foundBuilder)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find user"})
+			return
+		}
+		defer cancel()
+		c.JSON(http.StatusFound, foundBuilder)
 	}
 }

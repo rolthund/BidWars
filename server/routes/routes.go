@@ -17,4 +17,7 @@ func UserRoutes(incomingRoutes *gin.RouterGroup) {
 	incomingRoutes.POST("/addproject", controllers.AddProject())
 	incomingRoutes.DELETE("deleteproject/:project_id", controllers.DeleteProjectByID())
 	incomingRoutes.PUT("editproject/:project_id", controllers.UpdateProject())
+	incomingRoutes.POST("leavereview/:contractor_id", controllers.LeaveReview())
+	incomingRoutes.POST("/verifycontractorslicense/:contractor_id", controllers.VerifyContrctorsLicense())
+	incomingRoutes.POST("/updatecontractorslicense/:contractor_id", controllers.UpdateContractorsLicense())
 }

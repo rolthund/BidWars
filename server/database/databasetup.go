@@ -53,3 +53,8 @@ func ProjectData(client *mongo.Client, CollectionName string) *mongo.Collection 
 	var projectcollection *mongo.Collection = client.Database("Bidwars").Collection(CollectionName)
 	return projectcollection
 }
+
+func ReviewData(client *mongo.Client, CollectionName string) *mongo.Collection {
+	var reviewCollection *mongo.Collection = client.Database("Bidwars").Collection(CollectionName)
+	return reviewCollection
+}

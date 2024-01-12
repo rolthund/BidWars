@@ -10,7 +10,9 @@ import SwiftUI
 struct VerificationCodeInputView: View {
     @State private var verificationCode = ""
     @Binding var isPhoneVerified: Bool
+    @Binding var isWrongTwilioCode: Bool
     @Binding var isPresented: Bool
+    
 
        var body: some View {
            VStack {
@@ -28,27 +30,37 @@ struct VerificationCodeInputView: View {
                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.gray, lineWidth: 1))
 
                Button(action:{
-                   NetworkManager.shared.verifyPhoneNumber(code: verificationCode) {success in
-                       if success{
-                           print("Phone is verified! NOW user can use the app!")
-                           isPhoneVerified = true
-                           isPresented = false
-                       }
-                   }
+                  verifyCode()
                })
                {
                    Text("Verify Code")
-                   
                }
                .padding()
            }
        }
+    
+    private func verifyCode() {
+            NetworkManager.shared.verifyPhoneNumber(code: verificationCode) { success in
+                DispatchQueue.main.async {
+                    if success {
+                        print("Phone is verified! NOW user can use the app!")
+                        isPhoneVerified = true
+                    } else {
+                        print("Could not verify your phone number")
+                        isPhoneVerified = false
+                        isWrongTwilioCode = true
+                    }
+                    isPresented = false
+                }
+            }
+        }
 }
 
 struct VerificationCodeInputView_Previews: PreviewProvider {
     static var previews: some View {
         @State var isPhoneVerified = false
         @State var isPresented = false
-        VerificationCodeInputView(isPhoneVerified: $isPhoneVerified, isPresented: $isPresented)
+        @State var isWrongTwilioCode = false
+        VerificationCodeInputView(isPhoneVerified: $isPhoneVerified,isWrongTwilioCode: $isWrongTwilioCode, isPresented: $isPresented)
     }
 }
