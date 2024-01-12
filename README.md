@@ -24,4 +24,7 @@ Some of the screenshots:
 ![failverifying](https://github.com/rolthund/BidWars/blob/main/images/errverifying.png)
 *This is what happens if the verification fails.
 
+![postman](https://github.com/rolthund/BidWars/blob/main/images/postman.png)
+*List of some endpoinds tested with Postman. 
+
 
