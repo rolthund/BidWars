@@ -1,3 +1,4 @@
+.DS_Store
 server/.env
 server/go.mod
 server/go.sum
@@ -5,4 +6,3 @@ server/docker-compose.yaml
 client/BidWars.xcodeproj/
 client/BidWars.entitlements
 client/Assets.xcassets/
-/.DS_Store
