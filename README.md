@@ -25,6 +25,6 @@ Some of the screenshots:
 *This is what happens if the verification fails.
 
 ![postman](https://github.com/rolthund/BidWars/blob/main/images/postman.png)
-*List of some endpoinds tested with Postman. 
+*List of some endpoints tested with Postman. 
 
 
