@@ -27,4 +27,7 @@ Some of the screenshots:
 ![postman](https://github.com/rolthund/BidWars/blob/main/images/postman.png)
 *List of some endpoints tested with Postman. 
 
+![bids](https://github.com/rolthund/BidWars/blob/main/images/bids.png)
+*This is work in progress but this is the idea of how BidListView is going to look like.  
+
 
